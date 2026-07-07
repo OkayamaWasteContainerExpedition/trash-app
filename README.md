@@ -351,8 +351,8 @@ type AvailableTime = '24時間利用可' | '施設の営業時間のみ' | 'そ�
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/OkayamaWasteContainerExpedition/Monorepo.git
-cd Monorepo
+git clone https://github.com/OkayamaWasteContainerExpedition/trash-app.git
+cd trash-app
 
 # 依存関係をインストール
 npm install
