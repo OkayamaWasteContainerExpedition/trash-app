@@ -1,0 +1,1 @@
+"""OkayamaWasteContainerExpedition backend package."""
