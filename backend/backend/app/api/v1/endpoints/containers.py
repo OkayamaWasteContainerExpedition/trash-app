@@ -62,3 +62,60 @@ def create_container(
         ) from exc
 
     return waste_container
+
+
+@router.put("/{container_id}", response_model=WasteContainerResponse)
+def update_container(
+    payload: WasteContainerCreate,
+    container_id: int = Path(gt=0),
+    db: Session = Depends(get_db),
+) -> WasteContainer:
+    waste_container = db.get(WasteContainer, container_id)
+    if waste_container is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Container not found.",
+        )
+
+    timestamp = tokyo_now()
+    waste_container.name = payload.name
+    waste_container.latitude = payload.latitude
+    waste_container.longitude = payload.longitude
+    waste_container.memo = payload.memo
+    waste_container.image_url = payload.image_url
+    waste_container.updated_at = timestamp
+
+    try:
+        db.commit()
+        db.refresh(waste_container)
+    except SQLAlchemyError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update container.",
+        ) from exc
+
+    return waste_container
+
+
+@router.delete("/{container_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_container(
+    container_id: int = Path(gt=0),
+    db: Session = Depends(get_db),
+) -> None:
+    waste_container = db.get(WasteContainer, container_id)
+    if waste_container is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Container not found.",
+        )
+
+    try:
+        db.delete(waste_container)
+        db.commit()
+    except SQLAlchemyError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete container.",
+        ) from exc

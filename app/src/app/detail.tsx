@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Platform, Image, Alert } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker } from '../components/app-map';
 import { useRouter } from 'expo-router';
 import { useBinContext } from '../contexts/BinContext';
 import { Colors } from '../constants/theme';
@@ -20,9 +20,13 @@ export default function DetailScreen() {
           style: 'destructive', 
           onPress: async () => {
             if (selectedBin) {
-              await removeBin(selectedBin.id);
-              setSelectedBin(null);
-              router.back();
+              try {
+                await removeBin(selectedBin.id);
+                setSelectedBin(null);
+                router.back();
+              } catch {
+                Alert.alert('削除できませんでした', 'バックエンドとの通信を確認してください。');
+              }
             }
           }
         }

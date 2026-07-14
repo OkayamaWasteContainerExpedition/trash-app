@@ -22,3 +22,7 @@ __pycache__/
 .pytest_cache/
 .venv/
 venv/
+
+# Datas 
+/datas
+/backend/backend/datas

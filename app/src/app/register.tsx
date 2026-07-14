@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, TextInput, Platform, Image, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, TextInput, Platform, Image, Modal, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker } from '../components/app-map';
 import { useBinContext, BinCategory, AvailableTime } from '../contexts/BinContext';
 import { Colors } from '../constants/theme';
 
@@ -27,6 +27,7 @@ export default function RegisterScreen() {
 
   // AI解析モック用ステート
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (capturedImage) {
@@ -54,21 +55,32 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
-    await addBin({
-      latitude: location ? location.coords.latitude : 34.665,
-      longitude: location ? location.coords.longitude : 133.918,
-      title: address || '新しいゴミ箱',
-      categories,
-      cleanliness,
-      visibility,
-      availableTime,
-      memo,
-      helpfulCount: 0,
-      lastChecked: '今日',
-      imageUrl: capturedImage || undefined,
-    });
-    setCapturedImage(null);
-    router.replace('/');
+    if (isSaving) {
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await addBin({
+        latitude: location ? location.coords.latitude : 34.665,
+        longitude: location ? location.coords.longitude : 133.918,
+        title: address || '新しいゴミ箱',
+        categories,
+        cleanliness,
+        visibility,
+        availableTime,
+        memo,
+        helpfulCount: 0,
+        lastChecked: '今日',
+        imageUrl: capturedImage || undefined,
+      });
+      setCapturedImage(null);
+      router.replace('/');
+    } catch {
+      Alert.alert('登録できませんでした', 'バックエンドが起動しているか確認してください。');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const openMapModal = () => {
@@ -233,8 +245,8 @@ export default function RegisterScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.submitButton} onPress={handleRegister}>
-          <Text style={styles.submitButtonText}>＋ マップに追加する</Text>
+        <TouchableOpacity style={styles.submitButton} onPress={handleRegister} disabled={isSaving}>
+          <Text style={styles.submitButtonText}>{isSaving ? '保存中...' : '＋ マップに追加する'}</Text>
         </TouchableOpacity>
       </View>
 

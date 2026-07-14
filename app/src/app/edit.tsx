@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, TextInput, Platform, Image, Modal, KeyboardAvoidingView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, TextInput, Platform, Image, Modal, KeyboardAvoidingView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker } from '../components/app-map';
 import { useBinContext, BinCategory, AvailableTime } from '../contexts/BinContext';
 import { Colors } from '../constants/theme';
 
@@ -22,6 +22,7 @@ export default function EditScreen() {
   
   const [isMapModalVisible, setMapModalVisible] = useState(false);
   const [tempRegion, setTempRegion] = useState({ latitude: location.latitude, longitude: location.longitude, latitudeDelta: 0.005, longitudeDelta: 0.005 });
+  const [isSaving, setIsSaving] = useState(false);
 
   if (!selectedBin) {
     return (
@@ -37,19 +38,30 @@ export default function EditScreen() {
   };
 
   const handleUpdate = async () => {
-    await updateBin({
-      ...selectedBin,
-      latitude: location.latitude,
-      longitude: location.longitude,
-      title: address || '名称未設定のゴミ箱',
-      categories,
-      cleanliness,
-      visibility,
-      availableTime,
-      memo,
-      lastChecked: '今日',
-    });
-    router.back();
+    if (isSaving) {
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await updateBin({
+        ...selectedBin,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        title: address || '名称未設定のゴミ箱',
+        categories,
+        cleanliness,
+        visibility,
+        availableTime,
+        memo,
+        lastChecked: '今日',
+      });
+      router.back();
+    } catch {
+      Alert.alert('保存できませんでした', 'バックエンドとの通信を確認してください。');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const openMapModal = () => {
@@ -194,8 +206,8 @@ export default function EditScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.submitButton} onPress={handleUpdate}>
-          <Text style={styles.submitButtonText}>更新内容を保存する</Text>
+        <TouchableOpacity style={styles.submitButton} onPress={handleUpdate} disabled={isSaving}>
+          <Text style={styles.submitButtonText}>{isSaving ? '保存中...' : '更新内容を保存する'}</Text>
         </TouchableOpacity>
       </View>
 

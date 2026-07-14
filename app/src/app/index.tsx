@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform, Alert } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker } from '../components/app-map';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import { useBinContext, TrashBin } from '../contexts/BinContext';
@@ -63,9 +63,13 @@ export default function MapScreen() {
   const handleDeleteBin = (id: string) => {
     Alert.alert('ゴミ箱の削除', '本当にこのゴミ箱を削除しますか？', [
       { text: 'キャンセル', style: 'cancel' },
-      { text: '削除する', style: 'destructive', onPress: () => {
-         removeBin(id);
-         setSelectedBin(null);
+      { text: '削除する', style: 'destructive', onPress: async () => {
+        try {
+          await removeBin(id);
+          setSelectedBin(null);
+        } catch {
+          Alert.alert('削除できませんでした', 'バックエンドとの通信を確認してください。');
+        }
       }}
     ]);
   };
